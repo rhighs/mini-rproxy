@@ -15,15 +15,8 @@ It accepts modern JWT-based Authorization headers, peeks inside and inspects cla
 - Reads runtime secrets / keys from environment (or `.env`) for future token translation.
 - Decodes HS256 JWTs (if `Authorization: Bearer <token>`) and logs the claims (debug/trace step before full translation logic).
 - Normalizes `X-Forwarded-Host`, upstream host, and trims configured prefix.
-
-## What it will (soon) do
-
-Planned progression (roadmap):
-1. Inject legacy token headers derived from JWT claims + configured secrets.
-2. Optionally cache / memoize legacy token derivations per JWT.
-3. Support AWS Secrets Manager / SSM param fetch (placeholders already hinted with `*_ARN` envs in compose).
-
----
+- Inject legacy token headers derived from JWT claims + configured secrets.
+- Optionally cache / memoize legacy token derivations per JWT.
 
 ## Quick Start (Local)
 
