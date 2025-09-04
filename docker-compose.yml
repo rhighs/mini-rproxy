@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  relay:
+    build: .
+    image: relay-proxy:latest
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - LEGACY_KEYS_JSON=${LEGACY_KEYS_JSON}
+      # or use ARNs:
+      # - JWT_SECRET_ARN=arn:aws:secretsmanager:eu-west-1:...:secret:jwt
+      # - LEGACY_KEYS_ARN=arn:aws:secretsmanager:eu-west-1:...:secret:legacy
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "1g"
+
