@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.0.0...v1.1.0) (2025-09-05)
+
+
+### Features
+
+* **gha:** update release repo ([88ae146](https://github.com/tgym-digital/mini-rproxy/commit/88ae1464f4430567c2f5d34d3f09740d832b607b))
+* **plugin:** simple plugins laoding system based of off https://pkg.go.dev/plugin ([aba5411](https://github.com/tgym-digital/mini-rproxy/commit/aba5411af412f23750405b2e7682b39016861532))
+
 ## 1.0.0 (2025-09-05)
 
 
