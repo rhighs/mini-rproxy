@@ -17,3 +17,5 @@ routes:
     upstream: https://api-zeta.example.net
   - prefix: /iotcore
     upstream: https://api-eta.example.net
+  - prefix: /echo
+    upstream: http://localhost:9999
