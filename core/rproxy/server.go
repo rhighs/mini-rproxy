@@ -13,13 +13,11 @@ import (
 	"github.com/tgym-digital/mini-rproxy/core/pluginapi"
 )
 
-// Route defines a path prefix -> upstream mapping.
 type Route struct {
 	Prefix   string
 	Upstream string
 }
 
-// findRoute selects the longest matching prefix.
 func findRoute(routes []Route, p string) (Route, bool) {
 	var best Route
 	hit := false
@@ -34,7 +32,6 @@ func findRoute(routes []Route, p string) (Route, bool) {
 	return best, hit
 }
 
-// RProxy is the reverse proxy server with optional plugins.
 type RProxy struct {
 	verbose bool
 	logger  *slog.Logger
@@ -57,7 +54,6 @@ func NewRProxy(routes []Route, verbose bool, logMode string, plugins []pluginapi
 	}
 }
 
-// statusRecorder captures HTTP status codes for logging.
 type statusRecorder struct {
 	http.ResponseWriter
 	status int
@@ -68,10 +64,8 @@ func (sr *statusRecorder) WriteHeader(code int) {
 	sr.ResponseWriter.WriteHeader(code)
 }
 
-// internal key name for abort signaling.
 const abortHeader = "X-MiniRProxy-Plugin-Abort"
 
-// pluginAbortTransport short-circuits outbound requests if a request phase plugin aborted.
 type pluginAbortTransport struct {
 	base http.RoundTripper
 }
@@ -83,7 +77,6 @@ func (t *pluginAbortTransport) RoundTrip(req *http.Request) (*http.Response, err
 	return t.base.RoundTrip(req)
 }
 
-// Start spins up the HTTP server (non-blocking) and returns it.
 func (R *RProxy) Start(addr string) *http.Server {
 	mux := http.NewServeMux()
 
@@ -136,18 +129,15 @@ func (R *RProxy) Start(addr string) *http.Server {
 			)
 		}
 
-		// Per-request shared value map for plugins.
 		values := make(map[string]any)
 
 		proxy := &httputil.ReverseProxy{
 			Director: func(req *http.Request) {
-				// Rewrite to upstream
 				req.URL.Scheme = up.Scheme
 				req.URL.Host = up.Host
 				req.Host = up.Host
 				req.Header.Set("X-Forwarded-Host", r.Host)
 
-				// Trim prefix
 				if strings.HasPrefix(req.URL.Path, route.Prefix) {
 					req.URL.Path = strings.TrimPrefix(req.URL.Path, route.Prefix)
 					if req.URL.Path == "" {
@@ -155,7 +145,6 @@ func (R *RProxy) Start(addr string) *http.Server {
 					}
 				}
 
-				// Request phase plugins
 				for _, p := range R.plugins {
 					ctx := &pluginapi.Context{
 						Phase:   pluginapi.PhaseRequest,
@@ -163,7 +152,6 @@ func (R *RProxy) Start(addr string) *http.Server {
 						Values:  values,
 					}
 					if err := p.Handle(ctx); err != nil {
-						// Mark abort; actual short-circuit happens in custom Transport.
 						req.Header.Set(abortHeader, p.Name()+": "+err.Error())
 						break
 					}
@@ -180,7 +168,6 @@ func (R *RProxy) Start(addr string) *http.Server {
 			},
 			Transport: &pluginAbortTransport{base: http.DefaultTransport},
 			ModifyResponse: func(resp *http.Response) error {
-				// Response phase plugins
 				for _, p := range R.plugins {
 					ctx := &pluginapi.Context{
 						Phase:    pluginapi.PhaseResponse,
@@ -201,7 +188,6 @@ func (R *RProxy) Start(addr string) *http.Server {
 				return nil
 			},
 			ErrorHandler: func(rw http.ResponseWriter, req *http.Request, err error) {
-				// Distinguish plugin abort vs upstream/network error (best-effort)
 				status := http.StatusBadGateway
 				if strings.Contains(err.Error(), "plugin") {
 					status = http.StatusBadGateway
