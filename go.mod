@@ -1,4 +1,4 @@
-module tgym-digital/relay-proxy
+module tgym-digital/mini-rproxy
 
 go 1.24.4
 

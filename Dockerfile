@@ -4,14 +4,14 @@ WORKDIR /src
 COPY go.mod ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/relay-proxy ./relay-proxy
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/mini-rproxy ./mini-rproxy
 
 # run (distroless)
 FROM gcr.io/distroless/static:nonroot
 ENV LISTEN_ADDR=:8080
 WORKDIR /app
-COPY --from=build /out/relay-proxy /bin/relay-proxy
+COPY --from=build /out/mini-rproxy /bin/mini-rproxy
 COPY config.example.yml /app/config.yml
 USER nonroot:nonroot
 EXPOSE 8080
-ENTRYPOINT ["/bin/relay-proxy","-config","/app/config.yml"]
+ENTRYPOINT ["/bin/mini-rproxy","-config","/app/config.yml"]

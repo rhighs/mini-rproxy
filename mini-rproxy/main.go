@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -29,10 +30,7 @@ type Config struct {
 }
 
 type EnvConfig struct {
-	JWTSecret    string
-	TgHashKey    string
-	TgSignSalt   string
-	TgLegacyPKey string
+	LogMode string
 }
 
 func loadDotEnv(path string) error {
@@ -42,7 +40,6 @@ func loadDotEnv(path string) error {
 	}
 	defer f.Close()
 
-	log.Printf("loading .env config from %s\n", path)
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
@@ -64,8 +61,8 @@ func loadDotEnv(path string) error {
 	return sc.Err()
 }
 
-func loadConfig(p string) Config {
-	b, err := os.ReadFile(p)
+func loadConfig(path string) Config {
+	b, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("read config: %v", err)
 	}
@@ -84,17 +81,12 @@ func loadEnv(path string) EnvConfig {
 		log.Printf("failed loading %s env file, skipping...\n", path)
 	}
 	var e EnvConfig
-	if v := os.Getenv("JWT_SECRET"); v != "" {
-		e.JWTSecret = v
-	}
-	if v := os.Getenv("TG_HASH_KEY"); v != "" {
-		e.TgHashKey = v
-	}
-	if v := os.Getenv("TG_SIGN_SALT"); v != "" {
-		e.TgSignSalt = v
-	}
-	if v := os.Getenv("TG_LEGACY_PKEY"); v != "" {
-		e.TgLegacyPKey = v
+	if v := os.Getenv("LOG_MODE"); v != "" {
+		if v == "text" || v == "json" {
+			e.LogMode = v
+		} else {
+			e.LogMode = "text"
+		}
 	}
 	return e
 }
@@ -121,6 +113,11 @@ func main() {
 	c := loadConfig(*cfgPath)
 	e := loadEnv(".env")
 
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	if e.LogMode == "json" {
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -142,10 +139,17 @@ func main() {
 
 			proxy := httputil.NewSingleHostReverseProxy(url)
 			if *verbose {
-				log.Printf("[req] %s %s from %s -> route %s upstream %s", r.Method, r.URL.Path, r.RemoteAddr, route.Prefix, url)
-				log.Printf("[req] incoming headers: %v", r.Header)
+				logger.Info("proxying incoming request",
+					"method", r.Method,
+					"path", r.URL.Path,
+					"remote_addr", r.RemoteAddr,
+					"matched_prefix", route.Prefix,
+					"upstream_url", url.String(),
+				)
+				logger.Info("proxying headers",
+					"headers", r.Header,
+				)
 			}
-			log.Printf("[PROXY PASS]: request received at %s at %s\n", r.URL, time.Now().UTC())
 			{
 				r.URL.Host = url.Host
 				r.URL.Scheme = url.Scheme
@@ -153,22 +157,14 @@ func main() {
 				r.Host = url.Host
 				path := r.URL.Path
 				r.URL.Path = strings.TrimLeft(path, route.Prefix)
-
-				if hAuthorization := r.Header.Get("Authorization"); hAuthorization != "" && strings.HasPrefix(hAuthorization, "Bearer ") {
-					token := hAuthorization[7:]
-					claims, err := DecodeJWTHS256(token, e.JWTSecret)
-					if err != nil {
-						if *verbose {
-							log.Printf("[req] failed decoding jwt auth, got: %v", e)
-						}
-					}
-					log.Printf("[req(debug)]: claims value: %v\n", claims)
-				}
 			}
 			if *verbose {
-				log.Printf("[req->upstream] %s %s", r.Method, r.URL)
-				log.Printf("[req->upstream] host: %s", r.Host)
-				log.Printf("[req->upstream] headers: %v", r.Header)
+				logger.Info("[req->upstream]",
+					"method", r.Method,
+					"url", r.URL.String(),
+					"host", r.Host,
+					"headers", r.Header,
+				)
 			}
 			proxy.ServeHTTP(w, r)
 		},
@@ -184,9 +180,9 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("listening on %s", c.ListenAddr)
+		logger.Info("listening", "addr", c.ListenAddr)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("server: %v", err)
+			logger.Error("server error", "error", err)
 		}
 	}()
 
