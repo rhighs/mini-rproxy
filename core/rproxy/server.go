@@ -2,6 +2,7 @@ package rproxy
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
@@ -151,9 +152,12 @@ func (R *RProxy) Start(addr string) *http.Server {
 						Request: req,
 						Values:  values,
 					}
+					if R.verbose {
+						R.logger.Info("calling plugin", "plugin_name", p.Name())
+					}
 					if err := p.Handle(ctx); err != nil {
+						R.logger.Error(fmt.Sprintf("plugin \"%s\" has errored", p.Name()), "error", err.Error())
 						req.Header.Set(abortHeader, p.Name()+": "+err.Error())
-						break
 					}
 				}
 
@@ -176,7 +180,7 @@ func (R *RProxy) Start(addr string) *http.Server {
 						Values:   values,
 					}
 					if err := p.Handle(ctx); err != nil {
-						return err
+						R.logger.Error(fmt.Sprintf("plugin \"%s\" has errored", p.Name()), "error", err.Error())
 					}
 				}
 				if R.verbose {

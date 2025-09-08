@@ -8,7 +8,8 @@ GO_BUILD_FLAGS ?= -trimpath -ldflags="-s -w"
 PLUGIN_DIRS := $(shell find $(PLUGIN_SRC_DIR) -type d -mindepth 1 -maxdepth 1)
 PLUGIN_SOS  := $(patsubst $(PLUGIN_SRC_DIR)/%,$(PLUGIN_OUT_DIR)/%.so,$(PLUGIN_DIRS))
 
-.PHONY: build plugins run clean fmt run-echo stop-echo
+.PHONY: build plugins run clean fmt
+.PHONY: docker-build docker-run docker-stop docker-run-echo docker-stop-echo
 
 build:
 	mkdir -p $(BIN_DIR)
@@ -26,11 +27,17 @@ run: build plugins
 fmt:
 	go fmt ./...
 
-run-echo:
-	docker run -d --rm --name mini-rproxy-echo -p 9999:80 ealen/echo-server
-
-stop-echo:
-	docker stop mini-rproxy-echo || true
-
 clean:
 	rm -rf $(BIN_DIR)
+
+# docker shorthands
+docker-build: plugins
+	docker build --no-cache -t $(APP):latest .
+docker-run:
+	docker run -d --rm -p 8080:8080 -v ./bin/plugins:/app/plugins --name $(APP) $(APP):latest
+docker-stop:
+	docker stop $(APP)
+docker-run-echo:
+	docker run -d --rm --name  $(APP)-echo -p 9999:80 ealen/echo-server
+docker-stop-echo:
+	docker stop $(APP)-echo || true
