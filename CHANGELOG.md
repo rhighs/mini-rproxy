@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.2.0...v1.3.0) (2025-09-08)
+
+
+### Features
+
+* **plugins:** improve error handling and add docker commands ([ba02662](https://github.com/tgym-digital/mini-rproxy/commit/ba026620097fa2cb84af0676e8f37c67ed4fd3a5))
+
 ## [1.2.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.1.0...v1.2.0) (2025-09-05)
 
 
