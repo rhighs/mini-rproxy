@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.1.0...v1.2.0) (2025-09-05)
+
+
+### Features
+
+* **Dockerfile:** add plugindir param ([6abd7af](https://github.com/tgym-digital/mini-rproxy/commit/6abd7afcef59f9fcca9a02ffebfaec8ff407f85c))
+
 ## [1.1.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.0.0...v1.1.0) (2025-09-05)
 
 
