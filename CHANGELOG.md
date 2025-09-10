@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.5.0...v1.6.0) (2025-09-10)
+
+
+### Features
+
+* **docker:** buildx based targeted builds ([093bce0](https://github.com/tgym-digital/mini-rproxy/commit/093bce07ff1402ac29070f1ec1bb8b70ff12057d))
+
 ## [1.5.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.4.0...v1.5.0) (2025-09-10)
 
 
