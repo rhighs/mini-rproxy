@@ -39,7 +39,7 @@ RUN if [ -n "$TARGET_ARCH" ]; then \
       go build -trimpath -ldflags "-s -w" -o /out/mini-rproxy ./cmd
 
 # production target (distroless amd64)
-FROM --platform=$BUILDPLATFORM gcr.io/distroless/base AS distroless
+FROM gcr.io/distroless/base AS distroless
 ENV LISTEN_ADDR=:8080
 WORKDIR /app
 COPY --from=build /out/mini-rproxy /mini-rproxy
@@ -49,11 +49,11 @@ EXPOSE 8080
 ENTRYPOINT ["/mini-rproxy","-config","/app/config.yml","-plugindir","/app/plugins"]
 
 # development target (use the same binary built earlier)
-FROM --platform=$BUILDPLATFORM gcr.io/distroless/base AS dev
+FROM alpine:latest as dev
+RUN apk add --no-cache bash ca-certificates curl gcompat
 ENV LISTEN_ADDR=:8080
 WORKDIR /app
 COPY --from=build /out/mini-rproxy /mini-rproxy
 COPY config.example.yml /app/config.yml
-USER nonroot:nonroot
 EXPOSE 8080
 ENTRYPOINT ["/mini-rproxy", "-config", "/app/config.yml", "-plugindir", "/app/plugins"]
