@@ -106,9 +106,6 @@ testdata/
 .air.toml
 tmp/
 
-# Makefile
-Makefile
-
 # Node modules (if you have any frontend assets)
 node_modules/
 npm-debug.log*

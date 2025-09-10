@@ -1,0 +1,19 @@
+go run ./cmd legacy-build \
+    tokenDateTime=20250908151439 \
+    credentialId=4b96bb2e82d74fac83d36c8c098c02d5 \
+    applicationId=69295ed5a53c434b8518f2e0b5f05b28 \
+    languageId=1 \
+    timeZoneWindowsId='W. Europe Standard Time' \
+    userCultureName=it-IT \
+    facilityUrl=highflyingbirds \
+    facilityId=550915a8205548bf99574ba8f68169d4 \
+    staffId=e772127f7d6b46588968d817782c5775 \
+    userId=b1eb4ce526b844e883b0b7140bba3674 \
+    measurementSystem=1 \
+    loginType=1 \
+    requirePasswordOnDevice=0 \
+    tokenFor=0 \
+    clientApplicationTypes=11 \
+    iterationNumber=8290 \
+    slidingValue=0 \
+    domain=com.mywellness
