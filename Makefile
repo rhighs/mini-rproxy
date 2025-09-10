@@ -8,9 +8,6 @@ GO_BUILD_FLAGS ?= -trimpath -ldflags="-s -w"
 PLUGIN_DIRS := $(shell find $(PLUGIN_SRC_DIR) -type d -mindepth 1 -maxdepth 1)
 PLUGIN_SOS  := $(patsubst $(PLUGIN_SRC_DIR)/%,$(PLUGIN_OUT_DIR)/%.so,$(PLUGIN_DIRS))
 
-DOCKER_PLATFORM ?= linux/arm64
-DOCKER_TARGET   ?= dev
-
 .PHONY: build plugins run clean fmt
 .PHONY: docker-build docker-run docker-stop docker-run-echo docker-stop-echo
 
@@ -33,10 +30,13 @@ fmt:
 clean:
 	rm -rf $(BIN_DIR)
 
+DOCKER_PLATFORM ?= linux/arm64
+DOCKER_TARGET   ?= dev
+
 docker-build: plugins
-	docker buildx build --platform=$(DOCKER_PLATFORM) --target=$(DOCKER_TARGET) -t $(APP):latest --load .
+	docker buildx build --platform=$(DOCKER_PLATFORM) --target=$(DOCKER_TARGET) -t local/$(APP):latest --no-cache .
 docker-run:
-	docker run -d --rm -p 8080:8080 -v ./bin/plugins:/app/plugins --name $(APP) $(APP):latest
+	docker run --platform=$(DOCKER_PLATFORM) --rm -p 8080:8080 -v ./bin/plugins:/app/plugins --name $(APP) local/$(APP):latest
 docker-stop:
 	docker stop $(APP)
 docker-run-echo:
