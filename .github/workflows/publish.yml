@@ -48,16 +48,12 @@ jobs:
           aws ecr get-login-password --region ${{ env.AWS_REGION }} \
             | docker login --username AWS --password-stdin ${{ env.AWS_ECR_ACCOUNT }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
-      - name: Make build
-        run: |
-          make build
-
       - name: Build & Push image
         run: |
           REGISTRY="${{ env.AWS_ECR_ACCOUNT }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com"
           VERSION="${{ steps.ver.outputs.clean_tag }}"
           IMAGE="$REGISTRY/${{ env.IMAGE_NAME }}"
-          docker build -t "$IMAGE:$VERSION" -t "$IMAGE:latest" .
+	      docker buildx build --platform=linux/amd64 --target=distroless -t "$IMAGE:$VERSION" -t "$IMAGE:latest" .
           docker push "$IMAGE:$VERSION"
           docker push "$IMAGE:latest"
 
