@@ -140,10 +140,9 @@ func (R *RProxy) Start(addr string) *http.Server {
 				req.Header.Set("X-Forwarded-Host", r.Host)
 
 				if strings.HasPrefix(req.URL.Path, route.Prefix) {
-					req.URL.Path = strings.TrimPrefix(req.URL.Path, route.Prefix)
-					if req.URL.Path == "" {
-						req.URL.Path = "/"
-					}
+					req.URL.Path = up.Path + "/" + strings.TrimPrefix(req.URL.Path, route.Prefix)
+				} else {
+					req.URL.Path = up.Path
 				}
 
 				for _, p := range R.plugins {

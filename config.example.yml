@@ -18,4 +18,4 @@ routes:
   - prefix: /iotcore
     upstream: https://api-eta.example.net
   - prefix: /echo
-    upstream: http://localhost:9999
+    upstream: https://api-echo.example.net/echo
