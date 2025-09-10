@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/tgym-digital/mini-rproxy/compare/v1.6.0...v1.6.1) (2025-09-10)
+
+
+### Bug Fixes
+
+* **plugin:** golang plugin not loading due to missing libc dep ([8c0a1f6](https://github.com/tgym-digital/mini-rproxy/commit/8c0a1f6e2d5c02a8b5b07f03115f46c47090efc2))
+
 ## [1.6.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.5.0...v1.6.0) (2025-09-10)
 
 
