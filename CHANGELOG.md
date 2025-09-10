@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.4.0...v1.5.0) (2025-09-10)
+
+
+### Features
+
+* **dockerfile:** platform and cross compile opts ([6fa3d91](https://github.com/tgym-digital/mini-rproxy/commit/6fa3d91d879b34e209b00400a100e4e1227cdf5c))
+
 ## [1.4.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.3.0...v1.4.0) (2025-09-10)
 
 
