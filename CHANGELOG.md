@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.6.1...v1.7.0) (2025-09-10)
+
+
+### Features
+
+* **docker:** successful docker image build with plugin load ([3b1df56](https://github.com/tgym-digital/mini-rproxy/commit/3b1df565da206332fb416329354733adef8d0c30))
+
 ## [1.6.1](https://github.com/tgym-digital/mini-rproxy/compare/v1.6.0...v1.6.1) (2025-09-10)
 
 
