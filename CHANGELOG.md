@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/tgym-digital/mini-rproxy/compare/v1.7.0...v1.7.1) (2025-09-10)
+
+
+### Bug Fixes
+
+* trying to fix this error? "You have an error in your yaml syntax on line 52" ([f1f546e](https://github.com/tgym-digital/mini-rproxy/commit/f1f546eb270c262a6978da12c9f0bbda6614c1f6))
+
 ## [1.7.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.6.1...v1.7.0) (2025-09-10)
 
 
