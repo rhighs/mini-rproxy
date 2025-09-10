@@ -1,10 +1,15 @@
 # build
-FROM golang:1.24.4 AS build
+FROM --platform=linux/amd64 golang:1.24.4 AS build
 WORKDIR /src
 COPY go.mod ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/mini-rproxy ./cmd
+
+ENV CGO_ENABLED=1
+ENV GOOS=linux
+ENV GOARCH=amd64 
+
+RUN go build -trimpath -ldflags="-extldflags -s -w" -o /out/mini-rproxy ./cmd
 
 # run (distroless)
 FROM gcr.io/distroless/static:nonroot
