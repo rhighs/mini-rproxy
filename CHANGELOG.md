@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/tgym-digital/mini-rproxy/compare/v1.8.0...v1.8.1) (2025-09-15)
+
+
+### Bug Fixes
+
+* forgot adding Bearer to jwt ([a7671da](https://github.com/tgym-digital/mini-rproxy/commit/a7671da429f226e86a59429f3357380555a2724e))
+
 ## [1.8.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.7.1...v1.8.0) (2025-09-10)
 
 
