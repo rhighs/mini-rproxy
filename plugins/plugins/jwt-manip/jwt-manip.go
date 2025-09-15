@@ -48,7 +48,7 @@ func (p *LegacyTokenPlugin) Handle(ctx *pluginapi.Context) error {
 			ctx.Request.Header.Set("x-mwapps-eqtoken", eqToken)
 		}
 		if userToken != "" {
-			ctx.Request.Header.Set("authorization", userToken)
+			ctx.Request.Header.Set("authorization", "Bearer " + userToken)
 		}
 	}
 	return nil
