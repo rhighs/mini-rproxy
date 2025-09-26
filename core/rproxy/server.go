@@ -145,6 +145,9 @@ func (R *RProxy) Start(addr string) *http.Server {
 					req.URL.Path = up.Path
 				}
 
+				// Explicitly preserve query parameters from the original request
+				req.URL.RawQuery = r.URL.RawQuery
+
 				for _, p := range R.plugins {
 					ctx := &pluginapi.Context{
 						Phase:   pluginapi.PhaseRequest,

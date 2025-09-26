@@ -1,0 +1,7 @@
+listen_addr: ":8080"
+
+routes:
+  - prefix: /workout
+    upstream: http://localhost:9999
+  - prefix: /test
+    upstream: http://localhost:9999
