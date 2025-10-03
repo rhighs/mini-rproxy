@@ -29,8 +29,8 @@ func (p *LegacyTokenPlugin) Name() string { return "legacy-token" }
 
 func (p *LegacyTokenPlugin) Handle(ctx *pluginapi.Context) error {
 	if ctx.Phase == pluginapi.PhaseRequest {
-		maybeEqContext := ctx.Request.Header.Get("X-Equipment-Context")
-		maybeBearer := extractBearer(ctx.Request.Header.Get("Authorization"))
+		maybeEqContext := ctx.Request.Header.Get("x-equipment-context")
+		maybeBearer := extractBearer(ctx.Request.Header.Get("authorization"))
 		if maybeBearer == "" {
 			logger.Debug("authorization header not bearer")
 			return nil
@@ -48,7 +48,7 @@ func (p *LegacyTokenPlugin) Handle(ctx *pluginapi.Context) error {
 			ctx.Request.Header.Set("x-mwapps-eqtoken", eqToken)
 		}
 		if userToken != "" {
-			ctx.Request.Header.Set("authorization", "Bearer " + userToken)
+			ctx.Request.Header.Set("authorization", "Bearer "+userToken)
 		}
 	}
 	return nil

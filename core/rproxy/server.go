@@ -139,13 +139,15 @@ func (R *RProxy) Start(addr string) *http.Server {
 				req.Host = up.Host
 				req.Header.Set("X-Forwarded-Host", r.Host)
 
-				if strings.HasPrefix(req.URL.Path, route.Prefix) {
-					req.URL.Path = up.Path + "/" + strings.TrimPrefix(req.URL.Path, route.Prefix)
-				} else {
-					req.URL.Path = up.Path
+				cut, route_prefix_found := strings.CutPrefix(req.URL.Path, route.Prefix)
+				if route_prefix_found {
+					req.URL.Path = up.Path + cut
+					if R.verbose {
+						R.logger.Info("path prefix matched", "path_prefix_been_cut", cut, "path_became", req.URL.Path)
+					}
 				}
 
-				// Explicitly preserve query parameters from the original request
+				// explicitly preserve query parameters from the original request
 				req.URL.RawQuery = r.URL.RawQuery
 
 				for _, p := range R.plugins {

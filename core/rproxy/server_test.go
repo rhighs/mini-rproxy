@@ -12,38 +12,38 @@ import (
 func TestQueryParameterPreservation(t *testing.T) {
 	// Test that demonstrates the current Director function behavior
 	// This simulates what happens in the Director function
-	
+
 	tests := []struct {
-		name           string
-		originalURL    string
-		prefix         string
-		upstreamURL    string
-		expectedURL    string
-		expectedQuery  string
+		name          string
+		originalURL   string
+		prefix        string
+		upstreamURL   string
+		expectedURL   string
+		expectedQuery string
 	}{
 		{
-			name:           "query parameters should be preserved",
-			originalURL:    "http://localhost:8080/workout/say33?userId=123&filter=active&sort=desc",
-			prefix:         "/workout",
-			upstreamURL:    "https://api-beta.example.net",
-			expectedURL:    "https://api-beta.example.net/say33?userId=123&filter=active&sort=desc",
-			expectedQuery:  "userId=123&filter=active&sort=desc",
+			name:          "query parameters should be preserved",
+			originalURL:   "http://localhost:8080/workout/say33?userId=123&filter=active&sort=desc",
+			prefix:        "/workout",
+			upstreamURL:   "https://api-beta.example.net",
+			expectedURL:   "https://api-beta.example.net/say33?userId=123&filter=active&sort=desc",
+			expectedQuery: "userId=123&filter=active&sort=desc",
 		},
 		{
-			name:           "no query parameters",
-			originalURL:    "http://localhost:8080/workout/say33",
-			prefix:         "/workout",
-			upstreamURL:    "https://api-beta.example.net",
-			expectedURL:    "https://api-beta.example.net/say33",
-			expectedQuery:  "",
+			name:          "no query parameters",
+			originalURL:   "http://localhost:8080/workout/say33",
+			prefix:        "/workout",
+			upstreamURL:   "https://api-beta.example.net",
+			expectedURL:   "https://api-beta.example.net/say33",
+			expectedQuery: "",
 		},
 		{
-			name:           "single query parameter",
-			originalURL:    "http://localhost:8080/core/health?check=true",
-			prefix:         "/core",
-			upstreamURL:    "https://api-gamma.example.net",
-			expectedURL:    "https://api-gamma.example.net/health?check=true",
-			expectedQuery:  "check=true",
+			name:          "single query parameter",
+			originalURL:   "http://localhost:8080/core/health?check=true",
+			prefix:        "/core",
+			upstreamURL:   "https://api-gamma.example.net",
+			expectedURL:   "https://api-gamma.example.net/health?check=true",
+			expectedQuery: "check=true",
 		},
 	}
 
@@ -68,17 +68,17 @@ func TestQueryParameterPreservation(t *testing.T) {
 				Path:     originalURL.Path,
 				RawQuery: originalURL.RawQuery,
 			}}
-			
+
 			// Current implementation (without query parameter preservation)
 			req.URL.Scheme = upstreamURL.Scheme
 			req.URL.Host = upstreamURL.Host
-			
+
 			if strings.HasPrefix(req.URL.Path, tt.prefix) {
 				req.URL.Path = upstreamURL.Path + "/" + strings.TrimPrefix(req.URL.Path, tt.prefix)
 			} else {
 				req.URL.Path = upstreamURL.Path
 			}
-			// NOTE: req.URL.RawQuery is preserved automatically in this test, 
+			// NOTE: req.URL.RawQuery is preserved automatically in this test,
 			// but in the actual code it gets lost when we don't explicitly preserve it
 
 			currentURL := req.URL.String()
@@ -89,7 +89,7 @@ func TestQueryParameterPreservation(t *testing.T) {
 
 			// This test demonstrates that we need to preserve query parameters
 			if originalURL.RawQuery != req.URL.RawQuery {
-				t.Errorf("Query parameters were not preserved. Original: %q, Result: %q", 
+				t.Errorf("Query parameters were not preserved. Original: %q, Result: %q",
 					originalURL.RawQuery, req.URL.RawQuery)
 			}
 		})
