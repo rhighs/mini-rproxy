@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.9.0...v1.10.0) (2025-10-13)
+
+
+### Features
+
+* **jwt:** refactor equipment token generation API, update field names and encoding ([b64337a](https://github.com/tgym-digital/mini-rproxy/commit/b64337a9a487a03149a572fe2bd50345d9877d6d))
+
 ## [1.9.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.8.1...v1.9.0) (2025-10-13)
 
 
