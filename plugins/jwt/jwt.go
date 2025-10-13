@@ -38,19 +38,16 @@ type LegacyTokenPayload struct {
 }
 
 type EquipmentContextPayload struct {
-	Serial          string `json:"serial"`
-	FacilityID      string `json:"facilityId"`
-	DeviceType      string `json:"deviceType"`
-	ScreenType      string `json:"screenType"`
-	OperatingSystem string `json:"operatingSystem"`
-	IsKiosk         any    `json:"isKiosk"`
-	EquipmentCode   string `json:"equipmentCode"`
-	FacilityURL     string `json:"facilityUrl"`
-	SWVersion       string `json:"swVersion"`
-	Platform        string `json:"platform"`
-	MainAppVersion  string `json:"mainAppVersion"`
-	DomainID        string `json:"domainId"`
-	LOB             string `json:"lob"`
+	Serial          string `json:"s"`
+	FacilityID      string `json:"fid"`
+	DeviceType      string `json:"dt"`
+	ScreenType      string `json:"st"`
+	OperatingSystem string `json:"os"`
+	IsKiosk         any    `json:"k"`
+	EquipmentCode   string `json:"ec"`
+	FacilityURL     string `json:"furl"`
+	SWVersion       string `json:"v"`
+	Platform        string `json:"p"`
 }
 
 type JWTPayload struct {
@@ -100,9 +97,6 @@ func BuildLegacyToken(payload *JWTPayload) string {
 	}
 
 	return EncodeUserToken(parts, []byte(key), salt)
-	// raw := strings.Join(parts, "|")
-	// sig := computeHMACSHA512Hex([]byte(raw+salt), []byte(key))
-	// return base64urlEncode([]byte(raw)) + "." + strings.ToUpper(sig)
 }
 
 func guidN(s string) string {
@@ -193,22 +187,28 @@ func bool1EmptyString(v interface{}) string {
 	return ""
 }
 
-func BuildEquipmentToken(payload *JWTPayload, equipmentContext string) string {
-	if payload == nil || payload.EquipmentContext == nil {
-		if equipmentContext != "" {
-			if b := base64urlDecode(equipmentContext); len(b) > 0 {
-				var alt EquipmentContextPayload
-				if json.Unmarshal(b, &alt) == nil {
-					return buildEquipmentToken(&alt)
-				}
-			}
-		}
-	} else {
-		if eqToken := buildEquipmentToken(payload.EquipmentContext); eqToken != "" {
-			return eqToken
-		}
+func EquipmentTokenFromPayload(payload *JWTPayload) (string, error) {
+	eqToken, err := buildEquipmentToken(payload.EquipmentContext)
+	if err != nil {
+		return "", err
 	}
-	return ""
+
+	return eqToken, nil
+}
+
+func EquipmentTokenFromContext(equipmentContext string) (string, error) {
+	b := infernoDecode(equipmentContext)
+	var alt EquipmentContextPayload
+	if err := json.Unmarshal(b, &alt); err != nil {
+		return "", errors.New("malformed json payload, got error: " + err.Error())
+	}
+
+	token, err := buildEquipmentToken(&alt)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
 
 func ParseJWTPayload(token string) (*JWTPayload, error) {
@@ -230,10 +230,10 @@ func decodeJWTPayload(jwt string) []byte {
 	if len(parts) != 3 {
 		return nil
 	}
-	return base64urlDecode(parts[1])
+	return infernoDecode(parts[1])
 }
 
-func base64urlDecode(s string) []byte {
+func infernoDecode(s string) []byte {
 	switch len(s) % 4 {
 	case 2:
 		s += "=="
@@ -246,28 +246,21 @@ func base64urlDecode(s string) []byte {
 	return b
 }
 
-func base64urlEncode(b []byte) string {
-	if len(b) == 0 {
-		// For empty input we can decide on a convention.
-		// ASP.NET's UrlTokenEncode returns empty string for empty input.
-		// Its decode counterpart returns nil (or empty) accordingly.
-		// We'll return just "0" so the decoder can round-trip.
-		return "0"
+func infernoEncode(b []byte) string {
+	s := base64.StdEncoding.EncodeToString(b)
+	pad := 0
+	for len(s) > 0 && s[len(s)-1] == '=' {
+		pad++
+		s = s[:len(s)-1]
 	}
-
-	// Number of padding chars a standard base64 encoding would have added.
-	// Formula: (3 - (n % 3)) % 3  -> yields 0,1,2
-	pad := (3 - (len(b) % 3)) % 3
-
-	main := base64.RawURLEncoding.EncodeToString(b)
-	return main + strconv.Itoa(pad)
+	s = strings.NewReplacer("+", "-", "/", "_").Replace(s)
+	return s + strconv.Itoa(pad)
 }
 
-// RETAINED (for equipment token logic)
-func buildEquipmentToken(eq *EquipmentContextPayload) string {
+func buildEquipmentToken(eq *EquipmentContextPayload) (string, error) {
 	key := os.Getenv("TGAUTH_LEGACY_PKEY")
 	if key == "" {
-		return ""
+		return "", errors.New("TGAUTH_LEGACY_PKEY env must be set")
 	}
 
 	parts := []string{
@@ -276,49 +269,42 @@ func buildEquipmentToken(eq *EquipmentContextPayload) string {
 		eq.DeviceType,
 		eq.ScreenType,
 		eq.OperatingSystem,
-		strings.ToLower(asBoolString(eq.IsKiosk)),
+		asBoolString(eq.IsKiosk),
 		eq.EquipmentCode,
 		eq.FacilityURL,
 		eq.SWVersion,
 		eq.Platform,
-		eq.MainAppVersion,
-		defaultString(eq.DomainID, "0"),
-		defaultString(eq.LOB, "0"),
+
+		// NOTE(rob): ||0|1 are for defaults for:
+		//
+		//  MainAppVersion = tokenElements.Length >= 11
+		//                    ? tokenElements[10]
+		//                    : null,
+		//  DomainId = tokenElements.Length >= 12
+		//                    ? Convert.ToByte(tokenElements[11])
+		//                    : (byte)0,
+		//  Lob = tokenElements.Length >= 13
+		//                    ? tokenElements[12].ToEnum<LobTypes>()
+		//                    : LobTypes.Home
+		//
+		// this stuff can be found here:
+		// https://github.com/tgym-digital/technogym.mwcloud.packages/blob/afe1a230584db286e761c7cad952572b0688ff51/src/Security/Technogym.MwCloud.Security.Token/Implementations/EquipmentTokenService.cs#L29
+		//
+		"",
+		"0",
+		"1",
 	}
 
 	raw := strings.Join(parts, "|")
-	sig := computeHMACSHA1Hex([]byte(raw), []byte(key))
-	return base64urlEncode([]byte(raw)) + "." + strings.ToUpper(sig)
-}
-
-func defaultString(s, def string) string {
-	if s == "" {
-		return def
+	bytes, err := hex.DecodeString(key)
+	if err != nil {
+		return "", err
 	}
-	return s
-}
 
-// Generic helpers (some still used by tests or equipment token code)
-func asString(v interface{}) string {
-	switch t := v.(type) {
-	case nil:
-		return ""
-	case string:
-		return t
-	case float64:
-		if t == float64(int64(t)) {
-			return strconv.FormatInt(int64(t), 10)
-		}
-		return strconv.FormatFloat(t, 'f', -1, 64)
-	case int:
-		return strconv.Itoa(t)
-	case int64:
-		return strconv.FormatInt(t, 10)
-	case bool:
-		return strconv.FormatBool(t)
-	default:
-		return ""
-	}
+	sig := computeHMACSHA1Hex([]byte(raw), bytes)
+	token := infernoEncode([]byte(raw)) + "." + strings.ToUpper(sig)
+
+	return token, nil
 }
 
 func asInt(v interface{}) int64 {
@@ -349,26 +335,11 @@ func asInt(v interface{}) int64 {
 }
 
 func asBoolString(v interface{}) string {
-	switch t := v.(type) {
-	case bool:
-		return strconv.FormatBool(t)
-	case string:
-		l := strings.ToLower(t)
-		if l == "true" || l == "false" {
-			return l
-		}
-	case float64:
-		if t != 0 {
-			return "true"
-		}
-		return "false"
-	case int, int8, int16, int32, int64:
-		if asInt(t) != 0 {
-			return "true"
-		}
-		return "false"
+	if asInt(v) == 1 {
+		return "True"
+	} else {
+		return "False"
 	}
-	return "false"
 }
 
 func computeHMACSHA512Hex(message, secret []byte) string {
@@ -392,7 +363,7 @@ func urlTokenEncode(input []byte) string {
 	trimmed = strings.ReplaceAll(trimmed, "+", "-")
 	trimmed = strings.ReplaceAll(trimmed, "/", "_")
 	// append a single digit char equal to original padding count
-	return trimmed + string('0'+pad)
+	return trimmed + strconv.Itoa(pad)
 }
 
 func hashString512(key []byte, s string) string {

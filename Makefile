@@ -1,4 +1,5 @@
 APP            ?= mini-rproxy
+PLUGIN_OUT_DIR ?= plugins/out
 OUT_DIR        ?= out
 
 GO_BUILD_FLAGS ?= -trimpath -ldflags="-s -w"
@@ -11,7 +12,7 @@ build:
 	mkdir -p $(OUT_DIR)
 	go build $(GO_BUILD_FLAGS) -o $(OUT_DIR)/$(APP) ./cmd
 run: build
-	./$(OUT_DIR)/$(APP) -config ./config.example.yml -plugindir $(PLUGIN_OUT_DIR) -verbose
+	./$(OUT_DIR)/$(APP) -config ./config.example.yml -verbose -plugindir $(PLUGIN_OUT_DIR) 
 
 fmt:
 	go fmt ./...

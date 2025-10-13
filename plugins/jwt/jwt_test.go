@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -58,6 +59,29 @@ func TestParseJWTPayloadInvalidStructure(t *testing.T) {
 	_, err := ParseJWTPayload("abc.def")
 	if err == nil {
 		t.Fatalf("expected error for invalid jwt structure")
+	}
+}
+
+// Generic helpers (some still used by tests or equipment token code)
+func asString(v interface{}) string {
+	switch t := v.(type) {
+	case nil:
+		return ""
+	case string:
+		return t
+	case float64:
+		if t == float64(int64(t)) {
+			return strconv.FormatInt(int64(t), 10)
+		}
+		return strconv.FormatFloat(t, 'f', -1, 64)
+	case int:
+		return strconv.Itoa(t)
+	case int64:
+		return strconv.FormatInt(t, 10)
+	case bool:
+		return strconv.FormatBool(t)
+	default:
+		return ""
 	}
 }
 
@@ -136,7 +160,7 @@ func TestBuildLegacyTokenSuccess(t *testing.T) {
 	raw := strings.Join(parts, "|")
 	key := os.Getenv("TGAUTH_HASH_KEY")
 	salt := os.Getenv("TGAUTH_SIGN_SALT")
-	expected := base64urlEncode([]byte(raw)) + "." + strings.ToUpper(computeHMACSHA512Hex([]byte(raw+salt), []byte(key)))
+	expected := infernoEncode([]byte(raw)) + "." + strings.ToUpper(computeHMACSHA512Hex([]byte(raw+salt), []byte(key)))
 
 	if got != expected {
 		t.Fatalf("legacy token mismatch\n got: %s\nexp: %s", got, expected)
@@ -162,17 +186,18 @@ func TestBuildEquipmentTokenFromPayload(t *testing.T) {
 		DeviceType:      "treadmill",
 		ScreenType:      "lcd",
 		OperatingSystem: "linux",
-		IsKiosk:         true,
+		IsKiosk:         1,
 		EquipmentCode:   "EQCODE",
 		FacilityURL:     "https://facility.example",
 		SWVersion:       "1.0.0",
 		Platform:        "platformX",
-		MainAppVersion:  "2.3.4",
-		DomainID:        "42",
-		LOB:             "7",
 	}
 	jp := &JWTPayload{EquipmentContext: eq}
-	got := BuildEquipmentToken(jp, "")
+	got, err := EquipmentTokenFromPayload(jp)
+	if err != nil {
+		t.Fatalf("expected nil error")
+	}
+
 	if got == "" {
 		t.Fatalf("expected non-empty equipment token")
 	}
@@ -188,13 +213,10 @@ func TestBuildEquipmentTokenFromPayload(t *testing.T) {
 		eq.FacilityURL,
 		eq.SWVersion,
 		eq.Platform,
-		eq.MainAppVersion,
-		defaultString(eq.DomainID, "0"),
-		defaultString(eq.LOB, "0"),
 	}
 	raw := strings.Join(parts, "|")
 	key := os.Getenv("TGAUTH_LEGACY_PKEY")
-	expected := base64urlEncode([]byte(raw)) + "." + strings.ToUpper(computeHMACSHA1Hex([]byte(raw), []byte(key)))
+	expected := infernoEncode([]byte(raw)) + "." + strings.ToUpper(computeHMACSHA1Hex([]byte(raw), []byte(key)))
 
 	if got != expected {
 		t.Fatalf("equipment token mismatch\n got: %s\nexp: %s", got, expected)
@@ -210,21 +232,20 @@ func TestBuildEquipmentTokenFromContextParam(t *testing.T) {
 		DeviceType:      "bike",
 		ScreenType:      "oled",
 		OperatingSystem: "android",
-		IsKiosk:         false,
+		IsKiosk:         0,
 		EquipmentCode:   "EQ777",
 		FacilityURL:     "https://f.example",
 		SWVersion:       "9.9.9",
 		Platform:        "android",
-		MainAppVersion:  "5.6.7",
-		DomainID:        "",
-		LOB:             "",
 	}
-	// JWTPayload has nil EquipmentContext, so it must fall back to provided context
-	jp := &JWTPayload{}
 
 	js, _ := json.Marshal(eq)
 	ctxParam := base64.RawURLEncoding.EncodeToString(js)
-	got := BuildEquipmentToken(jp, ctxParam)
+	got, err := EquipmentTokenFromContext(ctxParam)
+	if err != nil {
+		t.Fatalf("expected nil error")
+	}
+
 	if got == "" {
 		t.Fatalf("expected non-empty equipment token from context param")
 	}

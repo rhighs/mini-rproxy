@@ -40,5 +40,6 @@ type Context struct {
 // proxy will emit a 502 (or configurable) to the client.
 type Plugin interface {
 	Name() string
+	Init()
 	Handle(ctx *Context) error
 }

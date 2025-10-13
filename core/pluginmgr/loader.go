@@ -44,6 +44,8 @@ func (l *Loader) LoadAll(dir string) ([]pluginapi.Plugin, error) {
 			l.log("error", "failed loading plugin", "path", path, "error", err)
 			return nil
 		}
+
+		p.Init()
 		l.log("info", "loaded plugin", "name", p.Name(), "path", path)
 		plugins = append(plugins, p)
 		return nil

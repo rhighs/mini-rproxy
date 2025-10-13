@@ -182,11 +182,14 @@ func initCommands() {
 			if err != nil {
 				return fmt.Errorf("parse error: %w", err)
 			}
-			tok := jwtlib.BuildEquipmentToken(payload, *equipmentFromJWTExtCtxFlag)
-			if tok == "" {
-				return fmt.Errorf("equipment token generation failed (missing env vars or data)")
+			token, err := jwtlib.EquipmentTokenFromContext(*equipmentFromJWTExtCtxFlag)
+			if err != nil {
+				token, err = jwtlib.EquipmentTokenFromPayload(payload)
+				if err != nil {
+					return err
+				}
 			}
-			fmt.Println(tok)
+			fmt.Println(token)
 			return nil
 		},
 	}
@@ -214,9 +217,9 @@ func initCommands() {
 				return fmt.Errorf("unmarshal equipment payload: %w", err)
 			}
 			payload := &jwtlib.JWTPayload{EquipmentContext: &eq}
-			tok := jwtlib.BuildEquipmentToken(payload, "")
-			if tok == "" {
-				return fmt.Errorf("equipment token generation failed (missing env vars?)")
+			tok, err := jwtlib.EquipmentTokenFromPayload(payload)
+			if err != nil {
+				return err
 			}
 			fmt.Println(tok)
 			return nil
