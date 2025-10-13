@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.0](https://github.com/tgym-digital/mini-rproxy/compare/v1.8.1...v1.9.0) (2025-10-13)
+
+
+### Features
+
+* **examples:** add gym-kit-settings.sh for fetching kit settings via curl ([2eae9aa](https://github.com/tgym-digital/mini-rproxy/commit/2eae9aa997d40b0b90b5c59af544ba67a19dcc81))
+
+
+### Bug Fixes
+
+* **rproxy:** use strings.CutPrefix for URL path modification and improve logging of path rewrite ([4a1caa6](https://github.com/tgym-digital/mini-rproxy/commit/4a1caa668893cfeea5efb53ce0c84e17da656cb1))
+
 ## [1.8.1](https://github.com/tgym-digital/mini-rproxy/compare/v1.8.0...v1.8.1) (2025-09-15)
 
 
