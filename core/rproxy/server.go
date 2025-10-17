@@ -1,6 +1,7 @@
 package rproxy
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -15,8 +16,8 @@ import (
 )
 
 type Route struct {
-	Prefix   string
-	Upstream string
+	Prefix   string `json:"prefix"`
+	Upstream string `json:"upstream"`
 }
 
 func findRoute(routes []Route, p string) (Route, bool) {
@@ -94,6 +95,22 @@ func (R *RProxy) Start(addr string) *http.Server {
 		)
 	})
 
+	mux.HandleFunc("/configz", func(w http.ResponseWriter, r *http.Request) {
+		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		w = rec
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(R.routes); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			R.logger.Error("config_encode_error", "error", err)
+		}
+		R.logger.Info("request",
+			"path", r.URL.Path,
+			"method", r.Method,
+			"status", rec.status,
+			"config_count", len(R.routes),
+		)
+	})
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		w = rec
@@ -147,7 +164,6 @@ func (R *RProxy) Start(addr string) *http.Server {
 					}
 				}
 
-				// explicitly preserve query parameters from the original request
 				req.URL.RawQuery = r.URL.RawQuery
 
 				for _, p := range R.plugins {
